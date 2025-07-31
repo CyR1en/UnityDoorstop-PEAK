@@ -166,6 +166,13 @@ static inline void init_cmd_args() {
                   load_path_argv);
         PARSE_ARG(TEXT("--doorstop-clr-runtime-coreclr-path"),
                   config.clr_runtime_coreclr_path, load_path_argv);
+				  
+		if (STR_EQUAL(argv[i], TEXT("-force-dx12")) ||
+			STR_EQUAL(argv[i], TEXT("-dx12")) ||
+			STR_EQUAL(argv[i], TEXT("-d3d12"))) {
+			config.bypass_vulkan = 1;
+			continue;
+		}
     }
 
     LocalFree(argv);
