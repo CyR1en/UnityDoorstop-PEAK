@@ -180,7 +180,7 @@ static inline void init_cmd_args() {
         PARSE_ARG(TEXT("-dx12"), config.bypass_vulkan, load_store_true);
         PARSE_ARG(TEXT("-force-dx12"), config.bypass_vulkan, load_store_true);
         PARSE_ARG(TEXT("-d3d12"), config.bypass_vulkan, load_store_true);
-        PARSE_ARG(TEXT("-force-d312"), config.bypass_vulkan, load_store_true);
+        PARSE_ARG(TEXT("-force-d3d12"), config.bypass_vulkan, load_store_true);
     }
 
     LocalFree(argv);
