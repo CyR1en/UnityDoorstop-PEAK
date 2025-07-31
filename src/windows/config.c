@@ -134,6 +134,16 @@ bool_t load_path_argv(char_t **argv, int *i, int argc, const char_t *arg_name,
     return TRUE;
 }
 
+bool_t load_store_true(char_t **argv, int *i, int argc, const char_t *arg_name,
+                       bool_t *value) {
+    if (STR_EQUAL(argv[*i], arg_name)) {
+        *value = TRUE;
+        LOG("ARGV: %s = true", arg_name);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static inline void init_cmd_args() {
     char_t *args = GetCommandLine();
     int argc = 0;
@@ -166,6 +176,11 @@ static inline void init_cmd_args() {
                   load_path_argv);
         PARSE_ARG(TEXT("--doorstop-clr-runtime-coreclr-path"),
                   config.clr_runtime_coreclr_path, load_path_argv);
+
+        PARSE_ARG(TEXT("-dx12"), config.bypass_vulkan, load_store_true);
+        PARSE_ARG(TEXT("-force-dx12"), config.bypass_vulkan, load_store_true);
+        PARSE_ARG(TEXT("-d3d12"), config.bypass_vulkan, load_store_true);
+        PARSE_ARG(TEXT("-force-d312"), config.bypass_vulkan, load_store_true);
     }
 
     LocalFree(argv);
