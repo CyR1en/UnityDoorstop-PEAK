@@ -1,4 +1,3 @@
-
 function add_proxydef(load_events)
     filename = "src/windows/proxy/proxylist.txt"
 
@@ -15,17 +14,37 @@ function add_proxydef(load_events)
         local funcs = io.readfile(filename):split("\n")
         for i, name in ipairs(funcs) do
             local func = string.trim(name)
-            proxy_defs = proxy_defs ..
-                             format("static FARPROC __%s__;\r\n", func)
-            proxy_adds = proxy_adds ..
-                             format(
-                                 "__%s__ = GetProcAddress((HMODULE)dll, \"%s\");\r\n",
-                                 func, func)
-            proxy_funcs = proxy_funcs ..
-                              format("void *exp_%s() { return __%s__(); }",
-                                     func, func) .. "\r\n"
-            exports_funcs =
-                exports_funcs .. format("%s = exp_%s", func, func) .. "\r\n"
+            if func ~= "" then
+                -- The version functions live in version.dll, everything else
+                -- in the module the proxy stands in for. Resolving them all
+                -- against the same module left the version functions
+                -- unresolved.
+                local module = "dll"
+                if func:match("^GetFileVersionInfo") or func:match("^Ver") then
+                    module = "version_dll"
+                end
+
+                proxy_defs = proxy_defs ..
+                                 format("static FARPROC __%s__;\r\n", func)
+                proxy_adds = proxy_adds ..
+                                 format(
+                                     "__%s__ = proxy_resolve((HMODULE)%s, \"%s\", proxy_self());\r\n",
+                                     func, module, func)
+
+                -- The export is a jump, not a call. A call would need the
+                -- exact prototype of the forwarded function, and the
+                -- prototypes of the WinHTTP and the version functions are
+                -- not the same. A jump keeps the argument registers and the
+                -- stack exactly as the caller left them, so it is correct
+                -- for every signature, including the ones with more than
+                -- four arguments and the ones that return a structure.
+                proxy_funcs = proxy_funcs ..
+                                  format(
+                                      "PROXY_NAKED void exp_%s(void) { __asm__(\"jmp *%s\"); }",
+                                      func, "__" .. func .. "__") .. "\n"
+                exports_funcs =
+                    exports_funcs .. format("%s = exp_%s", func, func) .. "\n"
+            end
         end
 
         util.write_template(
@@ -37,6 +56,7 @@ function add_proxydef(load_events)
                 PROXY_FUNCS = proxy_funcs
             }
         )
+
         util.write_template(
             path.join(tmpl_dir, "dll.def.in"),
             path.join("build", "dll.def"),

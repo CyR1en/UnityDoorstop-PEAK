@@ -5,9 +5,11 @@
 
 #include <windows.h>
 
+#include "../../src/windows/proxy/proxy.h"
+
 ${PROXY_DEFS}
 
-void load_functions(void *dll)
+void load_functions(void *dll, void *version_dll)
 {
 ${PROXY_ADDS}
 }
